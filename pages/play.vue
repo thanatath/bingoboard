@@ -88,6 +88,47 @@ const showQuestion = ref(false)
 const answeredQuestions = ref<Set<string>>(new Set())
 const isLoadingAnswers = ref(true) // Flag to prevent watch from triggering too early
 
+// Audio for new draw
+let drawSound: HTMLAudioElement | null = null
+
+// Initialize audio
+if (process.client) {
+  drawSound = new Audio('/sound.mp3')
+  drawSound.volume = 0.5 // Set volume to 50%
+}
+
+function playDrawSound() {
+  if (drawSound) {
+    drawSound.currentTime = 0 // Reset to start
+    drawSound.play().catch(error => {
+      console.log('Failed to play sound:', error)
+    })
+  }
+}
+
+async function verifyCard(): Promise<boolean> {
+  if (!playerStore.player?.card || !playerStore.card) return false
+
+  try {
+    const { $pb } = useNuxtApp()
+
+    // Get the card from database
+    const card = await $pb.collection('cards').getOne(playerStore.card.id)
+
+    // Check if card is still assigned to this player
+    if (!card.inUse || card.assignedTo !== playerStore.player.id) {
+      console.error('Card is no longer assigned to this player')
+      return false
+    }
+
+    console.log(`✅ Card ${card.code} is valid for player ${playerStore.player.name}`)
+    return true
+  } catch (error) {
+    console.error('Failed to verify card:', error)
+    return false
+  }
+}
+
 onMounted(async () => {
   // Check if player exists and has card
   await playerStore.loadFromLocalStorage()
@@ -98,6 +139,14 @@ onMounted(async () => {
   }
 
   if (!playerStore.hasCard) {
+    router.push('/card')
+    return
+  }
+
+  // Verify card is still valid (race condition check)
+  const isCardValid = await verifyCard()
+  if (!isCardValid) {
+    alert('การ์ดของคุณถูกใช้โดยคนอื่นแล้ว กรุณาเลือกการ์ดใหม่')
     router.push('/card')
     return
   }
@@ -180,6 +229,21 @@ onUnmounted(() => {
     $pb.collection('questionAnswers').unsubscribe()
   } catch (error) {
     console.error('Failed to unsubscribe from answers:', error)
+  }
+
+  // Clean up audio
+  if (drawSound) {
+    drawSound.pause()
+    drawSound = null
+  }
+})
+
+// Watch for new draws (play sound)
+watch(() => gameStore.latestDraw, (newDraw, oldDraw) => {
+  // Only play sound if there's a new draw (not initial load)
+  if (newDraw && oldDraw && newDraw.id !== oldDraw.id) {
+    console.log(`🔊 New draw: ${newDraw.number}`)
+    playDrawSound()
   }
 })
 

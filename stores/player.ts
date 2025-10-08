@@ -123,12 +123,25 @@ export const usePlayerStore = defineStore('player', {
       if (!this.player) throw new Error('No player found')
 
       try {
-        // Update card
-        await $pb.collection('cards').update(cardId, {
+        // Check if card is still available (race condition check)
+        const card = await $pb.collection('cards').getOne(cardId)
+
+        if (card.inUse) {
+          throw new Error('Card is already in use')
+        }
+
+        // Update card with filter to ensure it's not in use
+        // This prevents race condition at database level
+        const updatedCard = await $pb.collection('cards').update(cardId, {
           assignedTo: this.player.id,
           assignedAt: new Date().toISOString(),
           inUse: true
         })
+
+        // Verify the update was successful
+        if (!updatedCard.inUse || updatedCard.assignedTo !== this.player.id) {
+          throw new Error('Failed to claim card - race condition detected')
+        }
 
         // Update player
         await $pb.collection('players').update(this.player.id, {
@@ -141,9 +154,16 @@ export const usePlayerStore = defineStore('player', {
 
         this.subscribeToCard()
 
+        console.log(`✅ Successfully claimed card ${updatedCard.code}`)
         return true
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to claim card:', error)
+
+        // Provide user-friendly error message
+        if (error.message?.includes('in use') || error.message?.includes('race condition')) {
+          throw new Error('การ์ดนี้ถูกเลือกไปแล้ว')
+        }
+
         throw error
       }
     },

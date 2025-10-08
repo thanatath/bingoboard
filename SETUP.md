@@ -219,11 +219,70 @@ The app will be available at http://localhost:3000
 - Use "Reset Game" to clear all data and start fresh
 
 ## Production Deployment
-1. Build the app: `pnpm build`
-2. Deploy PocketBase to a server
-3. Update VITE_PB_URL to production PocketBase URL
-4. Deploy Nuxt app to hosting (Vercel, Netlify, etc.)
-5. Ensure PocketBase is accessible from the deployed app
+
+### Static Site Generation
+
+This project is configured to generate a static website.
+
+#### Build Static Files
+```bash
+pnpm build
+```
+
+Output directory: `.output/public/`
+
+#### Deployment Steps
+
+1. **Deploy PocketBase**
+   - Deploy PocketBase to a VPS or cloud server
+   - Note the public URL (e.g., `https://api.yourdomain.com`)
+   - Configure CORS to allow your frontend domain
+
+2. **Configure Environment**
+   - Set `VITE_PB_URL` to your production PocketBase URL
+   - For build-time: Create `.env` file
+   - For hosting platforms: Add environment variable in dashboard
+
+3. **Build Static Site**
+   ```bash
+   VITE_PB_URL=https://api.yourdomain.com pnpm build
+   ```
+
+4. **Deploy to Static Hosting**
+
+   **Option A: Netlify**
+   - Connect GitHub repository
+   - Build command: `pnpm build`
+   - Publish directory: `.output/public`
+   - Environment: `VITE_PB_URL=<your-pocketbase-url>`
+
+   **Option B: Vercel**
+   - Connect GitHub repository
+   - Framework: Nuxt.js
+   - Build command: `pnpm build`
+   - Output directory: `.output/public`
+   - Environment: `VITE_PB_URL=<your-pocketbase-url>`
+
+   **Option C: GitHub Pages**
+   - Build locally: `pnpm build`
+   - Deploy `.output/public/` to gh-pages branch
+
+   **Option D: Any Static Host**
+   - Upload `.output/public/` contents to web server
+
+5. **Verify Deployment**
+   - Check that frontend can connect to PocketBase
+   - Test real-time updates (WebSocket)
+   - Verify CORS configuration
+
+### Important Notes
+
+- **Static Site**: All pages are pre-rendered as static HTML
+- **Client-Side Only**: All game logic runs in the browser
+- **PocketBase Required**: Backend must be deployed separately
+- **Environment Variables**: Set at build time, not runtime
+- **CORS**: Configure PocketBase to allow your frontend domain
+- **WebSocket**: Ensure hosting supports WebSocket connections
 
 ## License
 Internal organizational use only.

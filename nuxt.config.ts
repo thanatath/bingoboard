@@ -4,6 +4,15 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: false, // SPA mode for mobile app
 
+  // Static site generation
+  nitro: {
+    preset: 'static',
+    prerender: {
+      crawlLinks: true,
+      routes: ['/']
+    }
+  },
+
   // Dev server configuration
   devServer: {
     host: '0.0.0.0',

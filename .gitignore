@@ -22,3 +22,9 @@ logs
 .env
 .env.*
 !.env.example
+
+# PocketBase
+pb_data
+pb_migrations
+pocketbase
+pocketbase.exe

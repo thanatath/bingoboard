@@ -58,6 +58,7 @@ A mobile-first, real-time Bingo game built with Nuxt 3, PocketBase, Pinia, and T
 
 - **[QUICK-START.md](./QUICK-START.md)** - 5-minute setup guide with step-by-step instructions
 - **[SETUP.md](./SETUP.md)** - Detailed setup and configuration guide
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Complete deployment guide for static hosting
 - **[README-bingo-mobile.md](./README-bingo-mobile.md)** - Complete game specification and architecture
 
 ## 🎮 How to Play
@@ -139,8 +140,9 @@ pnpm install
 # Start dev server
 pnpm dev
 
-# Build for production
+# Build static site for production
 pnpm build
+# Output: .output/public/
 
 # Preview production build
 pnpm preview
@@ -148,6 +150,52 @@ pnpm preview
 # Seed database
 pnpm seed
 ```
+
+## 📦 Static Build & Deployment
+
+This project is configured to generate a **static website** that can be deployed to any static hosting service.
+
+### Build Process
+
+```bash
+# Generate static files
+pnpm build
+```
+
+The static files will be generated in `.output/public/` directory.
+
+### Deployment Options
+
+#### 1. **Netlify**
+- Connect your GitHub repository
+- Build command: `pnpm build`
+- Publish directory: `.output/public`
+- Add environment variable: `VITE_PB_URL=<your-pocketbase-url>`
+
+#### 2. **Vercel**
+- Connect your GitHub repository
+- Framework preset: Nuxt.js
+- Build command: `pnpm build`
+- Output directory: `.output/public`
+- Add environment variable: `VITE_PB_URL=<your-pocketbase-url>`
+
+#### 3. **GitHub Pages**
+```bash
+# Build static files
+pnpm build
+
+# Deploy .output/public/ to gh-pages branch
+```
+
+#### 4. **Any Static Host**
+Simply upload the contents of `.output/public/` to your web server.
+
+### Important Notes
+
+- **PocketBase URL**: Make sure to set `VITE_PB_URL` environment variable to your production PocketBase URL
+- **CORS**: Configure PocketBase to allow requests from your deployed domain
+- **Database**: Deploy PocketBase separately (VPS, cloud server, etc.)
+- **Real-time**: Ensure WebSocket connections are allowed through your hosting/firewall
 
 ## 🔧 Configuration
 

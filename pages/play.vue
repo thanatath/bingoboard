@@ -112,7 +112,8 @@ onMounted(async () => {
   isLoadingAnswers.value = false
 
   // Check if there's an active question
-  if (gameStore.activeQuestion && !answeredQuestions.value.has(gameStore.activeQuestion.id)) {
+  // Don't show question if player has already won
+  if (gameStore.activeQuestion && !answeredQuestions.value.has(gameStore.activeQuestion.id) && !playerStore.hasWonBingo) {
     showQuestion.value = true
   }
 })
@@ -187,6 +188,12 @@ watch(() => gameStore.activeQuestion, (newQuestion) => {
   // Don't show modal if still loading answered questions
   if (isLoadingAnswers.value) {
     console.log('Still loading answered questions, skipping watch trigger')
+    return
+  }
+
+  // Don't show question if player has already won
+  if (playerStore.hasWonBingo) {
+    console.log('Player has already won, not showing question modal')
     return
   }
 

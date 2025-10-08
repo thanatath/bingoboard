@@ -43,6 +43,10 @@ export const usePlayerStore = defineStore('player', {
     playerId: (state) => state.player?.id,
     playerName: (state) => state.player?.name,
     hasWonBingo: (state) => {
+      // Check if player has bingoAtDraw set (means they won)
+      if (state.player?.bingoAtDraw) return true
+
+      // Otherwise check current card state
       if (!state.card) return false
       return hasWon(state.card.marksServer)
     }
@@ -205,10 +209,15 @@ export const usePlayerStore = defineStore('player', {
             createdAt: new Date().toISOString()
           })
 
-          // Update player
-          await $pb.collection('players').update(this.player.id, {
+          // Update player in database
+          const updatedPlayer = await $pb.collection('players').update(this.player.id, {
             bingoAtDraw: gameStore.game?.currentDrawIndex || 0
           })
+
+          // Update local state
+          this.player = updatedPlayer as Player
+
+          console.log(`🎉 Player ${this.player.name} won at draw ${updatedPlayer.bingoAtDraw}!`)
         }
 
       } catch (error) {
@@ -224,12 +233,23 @@ export const usePlayerStore = defineStore('player', {
       if (!this.card || this.isSubscribed) return
 
       try {
+        // Subscribe to card updates
         $pb.collection('cards').subscribe(this.card.id, (e: any) => {
           if (e.action === 'update') {
             this.card = e.record as any
             this.localMarks = [...this.card.marksServer]
           }
         })
+
+        // Subscribe to player updates (for bingoAtDraw)
+        if (this.player) {
+          $pb.collection('players').subscribe(this.player.id, (e: any) => {
+            if (e.action === 'update') {
+              this.player = e.record as Player
+              console.log(`Player updated: bingoAtDraw = ${this.player.bingoAtDraw}`)
+            }
+          })
+        }
 
         this.isSubscribed = true
       } catch (error) {
@@ -240,8 +260,13 @@ export const usePlayerStore = defineStore('player', {
     unsubscribe() {
       const { $pb } = useNuxtApp()
 
-      if (this.isSubscribed && this.card) {
-        $pb.collection('cards').unsubscribe(this.card.id)
+      if (this.isSubscribed) {
+        if (this.card) {
+          $pb.collection('cards').unsubscribe(this.card.id)
+        }
+        if (this.player) {
+          $pb.collection('players').unsubscribe(this.player.id)
+        }
         this.isSubscribed = false
       }
     }

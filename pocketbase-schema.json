@@ -1,0 +1,332 @@
+{
+  "collections": [
+    {
+      "name": "game",
+      "type": "base",
+      "schema": [
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "options": {
+            "maxSelect": 1,
+            "values": ["idle", "running", "ended"]
+          }
+        },
+        {
+          "name": "startedAt",
+          "type": "date"
+        },
+        {
+          "name": "endedAt",
+          "type": "date"
+        },
+        {
+          "name": "currentDrawIndex",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "questionEvery",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "activeQuestionEventId",
+          "type": "relation",
+          "options": {
+            "collectionId": "questionEvents",
+            "cascadeDelete": false,
+            "maxSelect": 1
+          }
+        }
+      ],
+      "listRule": "",
+      "viewRule": "",
+      "createRule": null,
+      "updateRule": null,
+      "deleteRule": null
+    },
+    {
+      "name": "players",
+      "type": "base",
+      "schema": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "joinedAt",
+          "type": "date",
+          "required": true
+        },
+        {
+          "name": "card",
+          "type": "relation",
+          "options": {
+            "collectionId": "cards",
+            "cascadeDelete": false,
+            "maxSelect": 1
+          }
+        },
+        {
+          "name": "answersCorrect",
+          "type": "number"
+        },
+        {
+          "name": "bingoAtDraw",
+          "type": "number"
+        }
+      ],
+      "listRule": "",
+      "viewRule": "",
+      "createRule": "",
+      "updateRule": null,
+      "deleteRule": null
+    },
+    {
+      "name": "cards",
+      "type": "base",
+      "schema": [
+        {
+          "name": "code",
+          "type": "text",
+          "required": true,
+          "unique": true
+        },
+        {
+          "name": "grid",
+          "type": "json",
+          "required": true
+        },
+        {
+          "name": "assignedTo",
+          "type": "relation",
+          "options": {
+            "collectionId": "players",
+            "cascadeDelete": false,
+            "maxSelect": 1
+          }
+        },
+        {
+          "name": "assignedAt",
+          "type": "date"
+        },
+        {
+          "name": "inUse",
+          "type": "bool",
+          "required": true
+        },
+        {
+          "name": "marksServer",
+          "type": "json",
+          "required": true
+        },
+        {
+          "name": "cellsMarked",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "linesComplete",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "progress",
+          "type": "json"
+        },
+        {
+          "name": "lastMarkedAt",
+          "type": "date"
+        }
+      ],
+      "listRule": "",
+      "viewRule": "",
+      "createRule": null,
+      "updateRule": "",
+      "deleteRule": null
+    },
+    {
+      "name": "draws",
+      "type": "base",
+      "schema": [
+        {
+          "name": "drawIndex",
+          "type": "number",
+          "required": true,
+          "unique": true
+        },
+        {
+          "name": "number",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "createdAt",
+          "type": "date",
+          "required": true
+        }
+      ],
+      "listRule": "",
+      "viewRule": "",
+      "createRule": null,
+      "updateRule": null,
+      "deleteRule": null
+    },
+    {
+      "name": "questions",
+      "type": "base",
+      "schema": [
+        {
+          "name": "text",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "choices",
+          "type": "json",
+          "required": true
+        },
+        {
+          "name": "correctIndex",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "weight",
+          "type": "number"
+        },
+        {
+          "name": "isActive",
+          "type": "bool"
+        }
+      ],
+      "listRule": "",
+      "viewRule": "",
+      "createRule": null,
+      "updateRule": null,
+      "deleteRule": null
+    },
+    {
+      "name": "questionEvents",
+      "type": "base",
+      "schema": [
+        {
+          "name": "drawIndex",
+          "type": "number",
+          "required": true,
+          "unique": true
+        },
+        {
+          "name": "question",
+          "type": "relation",
+          "required": true,
+          "options": {
+            "collectionId": "questions",
+            "cascadeDelete": false,
+            "maxSelect": 1
+          }
+        },
+        {
+          "name": "createdAt",
+          "type": "date",
+          "required": true
+        }
+      ],
+      "listRule": "",
+      "viewRule": "",
+      "createRule": null,
+      "updateRule": null,
+      "deleteRule": null
+    },
+    {
+      "name": "questionAnswers",
+      "type": "base",
+      "schema": [
+        {
+          "name": "player",
+          "type": "relation",
+          "required": true,
+          "options": {
+            "collectionId": "players",
+            "cascadeDelete": false,
+            "maxSelect": 1
+          }
+        },
+        {
+          "name": "questionEvent",
+          "type": "relation",
+          "required": true,
+          "options": {
+            "collectionId": "questionEvents",
+            "cascadeDelete": false,
+            "maxSelect": 1
+          }
+        },
+        {
+          "name": "choiceIndex",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "isCorrect",
+          "type": "bool",
+          "required": true
+        },
+        {
+          "name": "awardedFreeAtCell",
+          "type": "number"
+        },
+        {
+          "name": "answeredAt",
+          "type": "date",
+          "required": true
+        }
+      ],
+      "listRule": "",
+      "viewRule": "",
+      "createRule": "",
+      "updateRule": null,
+      "deleteRule": null
+    },
+    {
+      "name": "winners",
+      "type": "base",
+      "schema": [
+        {
+          "name": "player",
+          "type": "relation",
+          "required": true,
+          "options": {
+            "collectionId": "players",
+            "cascadeDelete": false,
+            "maxSelect": 1
+          }
+        },
+        {
+          "name": "drawIndex",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "lines",
+          "type": "json",
+          "required": true
+        },
+        {
+          "name": "createdAt",
+          "type": "date",
+          "required": true
+        }
+      ],
+      "listRule": "",
+      "viewRule": "",
+      "createRule": "",
+      "updateRule": null,
+      "deleteRule": null
+    }
+  ]
+}
+

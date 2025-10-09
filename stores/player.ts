@@ -227,6 +227,9 @@ export const usePlayerStore = defineStore('player', {
 
         const cellsMarked = newMarks.filter(m => m).length
         const progress = calculateBingoProgress(newMarks)
+        const wonBingo = hasWon(newMarks)
+
+        console.log(`📝 Marking cell ${cellIndex}: cellsMarked=${cellsMarked}, linesComplete=${progress.linesComplete}, hasWon=${wonBingo}`)
 
         const updatedCard = await $pb.collection('cards').update(this.card.id, {
           marksServer: newMarks,
@@ -239,21 +242,26 @@ export const usePlayerStore = defineStore('player', {
         // Update local card state immediately
         this.card = updatedCard as any
 
-        console.log(`📝 Marked cell ${cellIndex}: cellsMarked=${cellsMarked}, linesComplete=${progress.linesComplete}`)
+        console.log(`✅ Card updated in database`)
 
-        // Check if won
-        if (hasWon(newMarks) && !this.player.bingoAtDraw) {
-          console.log('🎉 BINGO detected! Creating winner record...')
+        // Check if won IMMEDIATELY after marking
+        if (wonBingo && !this.player.bingoAtDraw) {
+          console.log('🎉 BINGO detected! Creating winner record immediately...')
           const gameStore = useGameStore()
           const lines = getCompleteLines(newMarks)
 
+          console.log(`🎯 Complete lines: ${lines.join(', ')}`)
+          console.log(`🎯 Current draw index: ${gameStore.game?.currentDrawIndex}`)
+
           // Create winner record
-          await $pb.collection('winners').create({
+          const winner = await $pb.collection('winners').create({
             player: this.player.id,
             drawIndex: gameStore.game?.currentDrawIndex || 0,
             lines,
             createdAt: new Date().toISOString()
           })
+
+          console.log(`✅ Winner record created: ${winner.id}`)
 
           // Update player in database
           const updatedPlayer = await $pb.collection('players').update(this.player.id, {
@@ -264,6 +272,8 @@ export const usePlayerStore = defineStore('player', {
           this.player = updatedPlayer as Player
 
           console.log(`🎉 Player ${this.player.name} won at draw ${updatedPlayer.bingoAtDraw}!`)
+        } else if (wonBingo && this.player.bingoAtDraw) {
+          console.log(`⚠️ Player already won at draw ${this.player.bingoAtDraw}, skipping winner creation`)
         }
 
       } catch (error) {

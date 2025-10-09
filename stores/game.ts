@@ -289,7 +289,7 @@ export const useGameStore = defineStore('game', {
                 const progress = calculateBingoProgress(newMarks)
 
                 // Update card
-                await $pb.collection('cards').update(card.id, {
+                const updatedCard = await $pb.collection('cards').update(card.id, {
                   grid: newGrid,
                   marksServer: newMarks,
                   cellsMarked,
@@ -299,6 +299,8 @@ export const useGameStore = defineStore('game', {
                 })
 
                 console.log(`✅ Granted FREE cell at index ${cellIndex} for player ${playerId}`)
+                console.log(`Updated grid[${cellIndex}] = ${updatedCard.grid[cellIndex]}`)
+                console.log(`FREE cells in updated card: ${updatedCard.grid.filter((c: any) => c === 'FREE').length}`)
               } else {
                 console.log(`⚠️ No available cells to grant FREE for player ${playerId}`)
               }

@@ -272,9 +272,27 @@ export const usePlayerStore = defineStore('player', {
         $pb.collection('cards').subscribe(this.card.id, (e: any) => {
           if (e.action === 'update') {
             console.log('📥 Card updated from server:', e.record.code)
-            this.card = e.record as any
+
+            // Count FREE cells in grid
+            const freeCellsBefore = this.card.grid.filter((c: any) => c === 'FREE').length
+            const freeCellsAfter = e.record.grid.filter((c: any) => c === 'FREE').length
+
+            // Force update by creating new object (trigger Vue reactivity)
+            this.card = {
+              ...e.record,
+              grid: [...e.record.grid],
+              marksServer: [...e.record.marksServer]
+            } as any
+
             this.localMarks = [...this.card.marksServer]
+
             console.log(`Updated card: cellsMarked=${this.card.cellsMarked}, linesComplete=${this.card.linesComplete}`)
+            console.log(`FREE cells: ${freeCellsBefore} → ${freeCellsAfter}`)
+            console.log(`Grid sample: [${this.card.grid.slice(0, 5).join(', ')}]`)
+
+            if (freeCellsAfter > freeCellsBefore) {
+              console.log('🎁 New FREE cell granted!')
+            }
           }
         })
 

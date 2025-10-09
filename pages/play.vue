@@ -279,11 +279,25 @@ function handleCellClick(index: number) {
   playerStore.markCell(index, gameStore.drawnNumbers, latestDrawNumber)
 }
 
-function handleAnswered(isCorrect: boolean) {
+async function handleAnswered(isCorrect: boolean) {
   if (gameStore.activeQuestion) {
     answeredQuestions.value.add(gameStore.activeQuestion.id)
   }
-  
+
+  // If correct answer, reload card to get FREE cell
+  if (isCorrect) {
+    console.log('✅ Correct answer! Reloading card to get FREE cell...')
+
+    // Wait a bit for server to update
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    // Reload card from database
+    if (playerStore.card) {
+      await playerStore.loadCard(playerStore.card.id)
+      console.log('🔄 Card reloaded from database')
+    }
+  }
+
   // Keep modal open to show result
   // User will close it manually
 }

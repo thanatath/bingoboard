@@ -97,8 +97,19 @@ export const usePlayerStore = defineStore('player', {
       const { $pb } = useNuxtApp()
 
       try {
-        this.card = await $pb.collection('cards').getOne(cardId) as any
+        const card = await $pb.collection('cards').getOne(cardId) as any
+
+        // Force update by creating new object (trigger Vue reactivity)
+        this.card = {
+          ...card,
+          grid: [...card.grid],
+          marksServer: [...card.marksServer]
+        } as any
+
         this.localMarks = [...this.card.marksServer]
+
+        const freeCells = this.card.grid.filter((c: any) => c === 'FREE').length
+        console.log(`📥 Loaded card ${this.card.code}: cellsMarked=${this.card.cellsMarked}, FREE cells=${freeCells}`)
       } catch (error) {
         console.error('Failed to load card:', error)
       }

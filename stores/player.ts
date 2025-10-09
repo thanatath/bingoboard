@@ -44,11 +44,20 @@ export const usePlayerStore = defineStore('player', {
     playerName: (state) => state.player?.name,
     hasWonBingo: (state) => {
       // Check if player has bingoAtDraw set (means they won)
-      if (state.player?.bingoAtDraw) return true
+      if (state.player?.bingoAtDraw) {
+        console.log(`✅ Player has won at draw ${state.player.bingoAtDraw}`)
+        return true
+      }
 
       // Otherwise check current card state
       if (!state.card) return false
-      return hasWon(state.card.marksServer)
+
+      const won = hasWon(state.card.marksServer)
+      if (won) {
+        console.log(`✅ Card has winning pattern! linesComplete=${state.card.linesComplete}`)
+      }
+
+      return won
     }
   },
 
@@ -208,7 +217,7 @@ export const usePlayerStore = defineStore('player', {
         const cellsMarked = newMarks.filter(m => m).length
         const progress = calculateBingoProgress(newMarks)
 
-        await $pb.collection('cards').update(this.card.id, {
+        const updatedCard = await $pb.collection('cards').update(this.card.id, {
           marksServer: newMarks,
           cellsMarked,
           linesComplete: progress.linesComplete,
@@ -216,8 +225,14 @@ export const usePlayerStore = defineStore('player', {
           lastMarkedAt: new Date().toISOString()
         })
 
+        // Update local card state immediately
+        this.card = updatedCard as any
+
+        console.log(`📝 Marked cell ${cellIndex}: cellsMarked=${cellsMarked}, linesComplete=${progress.linesComplete}`)
+
         // Check if won
         if (hasWon(newMarks) && !this.player.bingoAtDraw) {
+          console.log('🎉 BINGO detected! Creating winner record...')
           const gameStore = useGameStore()
           const lines = getCompleteLines(newMarks)
 
@@ -256,8 +271,10 @@ export const usePlayerStore = defineStore('player', {
         // Subscribe to card updates
         $pb.collection('cards').subscribe(this.card.id, (e: any) => {
           if (e.action === 'update') {
+            console.log('📥 Card updated from server:', e.record.code)
             this.card = e.record as any
             this.localMarks = [...this.card.marksServer]
+            console.log(`Updated card: cellsMarked=${this.card.cellsMarked}, linesComplete=${this.card.linesComplete}`)
           }
         })
 

@@ -88,6 +88,7 @@ export const useAdminStore = defineStore('admin', {
                 expand: 'assignedTo'
               })
               this.allCards[index] = card as any
+              console.log(`📇 Updated card ${card.code}: cellsMarked=${card.cellsMarked}, linesComplete=${card.linesComplete}`)
             }
           } else if (e.action === 'delete') {
             this.allCards = this.allCards.filter(c => c.id !== e.record.id)

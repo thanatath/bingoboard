@@ -225,20 +225,19 @@ export const useAdminStore = defineStore('admin', {
           console.log(`📊 Already asked ${askedQuestionIds.size} questions`)
           console.log(`📋 Asked question IDs:`, Array.from(askedQuestionIds))
 
-          // Pick a weighted active question that hasn't been asked yet
+          // Get questions sorted by sequence (1, 2, 3, ...)
           const allQuestions = await $pb.collection('questions').getFullList({
             filter: 'isActive=true',
-            sort: 'created' // Sort by created date ascending (oldest first)
+            sort: 'sequence' // Sort ascending: 1 → 2 → 3 → ...
           }) as any
 
           console.log(`📚 Total active questions: ${allQuestions.length}`)
-          console.log(`📚 All question IDs:`, allQuestions.map((q: any) => q.id))
 
-          // Debug: Show question order
+          // Debug: Show ALL questions with sequence
           if (allQuestions.length > 0) {
-            console.log(`📅 Question order (oldest → newest):`)
+            console.log(`📊 ALL Questions (sorted by sequence):`)
             allQuestions.forEach((q: any, index: number) => {
-              console.log(`  ${index + 1}. ${q.text.substring(0, 30)}... (created: ${q.created})`)
+              console.log(`  ${index + 1}. [Seq ${q.sequence || 'NO SEQUENCE!'}] ${q.text.substring(0, 50)}`)
             })
           }
 
@@ -246,26 +245,21 @@ export const useAdminStore = defineStore('admin', {
           const availableQuestions = allQuestions.filter((q: any) => !askedQuestionIds.has(q.id))
 
           console.log(`✅ Available questions: ${availableQuestions.length} / ${allQuestions.length}`)
+
+          // Debug: Show available questions
           if (availableQuestions.length > 0) {
-            console.log(`✅ Available question IDs:`, availableQuestions.map((q: any) => q.id))
+            console.log(`📋 Available questions (not asked yet):`)
+            availableQuestions.forEach((q: any, index: number) => {
+              console.log(`  ${index + 1}. [Seq ${q.sequence}] ${q.text.substring(0, 50)}`)
+            })
           }
 
           if (availableQuestions.length > 0) {
-            // Simple weighted random selection from available questions
-            const totalWeight = availableQuestions.reduce((sum: number, q: any) => sum + (q.weight || 1), 0)
-            let random = Math.random() * totalWeight
-            let selectedQuestion = availableQuestions[0]
+            // Select the FIRST available question (lowest sequence)
+            const selectedQuestion = availableQuestions[0]
 
-            for (const q of availableQuestions) {
-              random -= q.weight || 1
-              if (random <= 0) {
-                selectedQuestion = q
-                break
-              }
-            }
-
-            console.log(`🎯 Selected question ID: ${selectedQuestion.id}`)
-            console.log(`🎯 Selected question text: ${selectedQuestion.text}`)
+            console.log(`🎯 SELECTED: [Sequence ${selectedQuestion.sequence}] ${selectedQuestion.text}`)
+            console.log(`🎯 Question ID: ${selectedQuestion.id}`)
 
             // Create question event
             const event = await $pb.collection('questionEvents').create({
@@ -510,7 +504,8 @@ export const useAdminStore = defineStore('admin', {
             choices: ['75', '76', '77', '78'],
             correctIndex: 2,
             weight: 1,
-            isActive: true
+            isActive: true,
+            sequence: 1
           }
         ]
 

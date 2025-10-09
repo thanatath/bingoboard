@@ -133,9 +133,10 @@ export const useGameStore = defineStore('game', {
 
         const askedQuestionIds = new Set(askedQuestionEvents.map((e: any) => e.question))
 
-        // Get all active questions
+        // Get all active questions sorted by sequence
         const allQuestions = await $pb.collection('questions').getFullList({
-          filter: 'isActive=true'
+          filter: 'isActive=true',
+          sort: 'sequence'
         }) as any
 
         // Filter out questions that have been asked

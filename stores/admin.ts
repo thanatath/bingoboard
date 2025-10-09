@@ -228,11 +228,19 @@ export const useAdminStore = defineStore('admin', {
           // Pick a weighted active question that hasn't been asked yet
           const allQuestions = await $pb.collection('questions').getFullList({
             filter: 'isActive=true',
-            sort: 'created' // Sort by created date (oldest first)
+            sort: 'created' // Sort by created date ascending (oldest first)
           }) as any
 
           console.log(`📚 Total active questions: ${allQuestions.length}`)
           console.log(`📚 All question IDs:`, allQuestions.map((q: any) => q.id))
+
+          // Debug: Show question order
+          if (allQuestions.length > 0) {
+            console.log(`📅 Question order (oldest → newest):`)
+            allQuestions.forEach((q: any, index: number) => {
+              console.log(`  ${index + 1}. ${q.text.substring(0, 30)}... (created: ${q.created})`)
+            })
+          }
 
           // Filter out questions that have been asked
           const availableQuestions = allQuestions.filter((q: any) => !askedQuestionIds.has(q.id))
